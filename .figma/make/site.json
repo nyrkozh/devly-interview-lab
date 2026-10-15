@@ -1,1 +1,10 @@
-{}
+{
+  "description": "This web application simulates job interviews for programmers by posing employer questions, helping users practice and improve their interview skills.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
