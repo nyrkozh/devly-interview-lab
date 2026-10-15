@@ -128,6 +128,274 @@ const questions = [
   "Расскажите о техническом решении, с которым команда была не согласна. Как вы действовали?",
 ];
 
+const historyItems = [
+  { role: "Frontend-разработчик", company: "Ozon Tech", date: "Сегодня, 14:30", score: 82, status: "Завершено" },
+  { role: "React-разработчик", company: "Яндекс", date: "18 мая, 19:10", score: 74, status: "Завершено" },
+  { role: "Frontend-разработчик", company: "Авито", date: "12 мая, 11:45", score: 68, status: "Завершено" },
+];
+
+function PageTitle({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
+  return (
+    <div className="mb-7">
+      <p className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.15em] text-indigo-600">{eyebrow}</p>
+      <h2 className="text-2xl font-extrabold tracking-[-0.035em] sm:text-[30px]">{title}</h2>
+      <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-500">{text}</p>
+    </div>
+  );
+}
+
+function OverviewPage({ onStart, onProgress }: { onStart: () => void; onProgress: () => void }) {
+  return (
+    <>
+      <PageTitle
+        eyebrow="Обзор"
+        title="Добрый день, Алексей"
+        text="Продолжайте практику: регулярные короткие сессии лучше всего помогают чувствовать себя увереннее на реальном интервью."
+      />
+      <section className="relative mb-6 overflow-hidden rounded-[26px] bg-slate-950 p-6 text-white shadow-[0_20px_60px_rgba(15,23,42,.18)] sm:p-8">
+        <div className="absolute -right-20 -top-24 size-72 rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="absolute bottom-0 right-20 size-32 rounded-full bg-violet-500/10 blur-2xl" />
+        <div className="relative max-w-xl">
+          <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.13em] text-indigo-200">
+            Рекомендуемая тренировка
+          </span>
+          <h3 className="mt-5 text-2xl font-extrabold tracking-tight sm:text-3xl">Техническое интервью по React</h3>
+          <p className="mt-3 text-sm leading-6 text-slate-400">
+            5 вопросов уровня Middle: архитектура, производительность, состояние приложения и командная работа.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <button onClick={onStart} className="rounded-xl bg-white px-5 py-3 text-xs font-extrabold text-slate-950 transition hover:bg-indigo-50">
+              Начать интервью
+            </button>
+            <span className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+              <Icon name="clock" className="size-4" /> 20–25 минут
+            </span>
+          </div>
+        </div>
+        <div className="absolute bottom-7 right-8 hidden h-36 w-44 items-end justify-center gap-2 lg:flex">
+          {[38, 62, 48, 84, 70].map((height, index) => (
+            <div key={index} className="w-5 rounded-t-md bg-gradient-to-t from-indigo-600/40 to-violet-300/70" style={{ height: `${height}%` }} />
+          ))}
+        </div>
+      </section>
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        {[
+          { label: "Пройдено интервью", value: "12", note: "+3 в этом месяце", color: "text-indigo-600", icon: "interview" as IconName },
+          { label: "Средний результат", value: "78%", note: "+6% за 30 дней", color: "text-emerald-600", icon: "chart" as IconName },
+          { label: "Время практики", value: "4,8 ч", note: "Цель: 6 часов", color: "text-amber-600", icon: "clock" as IconName },
+        ].map((stat) => (
+          <div key={stat.label} className="rounded-[20px] border border-slate-200/80 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-slate-500">{stat.label}</p>
+              <Icon name={stat.icon} className={`size-4 ${stat.color}`} />
+            </div>
+            <p className="mt-4 text-2xl font-extrabold tracking-tight">{stat.value}</p>
+            <p className={`mt-1 text-[10px] font-bold ${stat.color}`}>{stat.note}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[1.3fr_.7fr]">
+        <section className="rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-extrabold">Последние интервью</h3>
+              <p className="mt-1 text-[11px] text-slate-400">Ваши недавние результаты</p>
+            </div>
+            <button onClick={onProgress} className="text-xs font-bold text-indigo-600 hover:text-indigo-800">Весь прогресс</button>
+          </div>
+          <div className="space-y-3">
+            {historyItems.slice(0, 2).map((item) => (
+              <div key={item.date} className="flex items-center gap-4 rounded-2xl bg-slate-50 px-4 py-3.5">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm">
+                  <Icon name="briefcase" className="size-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold">{item.role}</p>
+                  <p className="mt-1 text-[10px] text-slate-400">{item.company} · {item.date}</p>
+                </div>
+                <p className="text-sm font-extrabold text-emerald-600">{item.score}%</p>
+              </div>
+            ))}
+          </div>
+        </section>
+        <section className="rounded-[22px] border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+          <h3 className="text-sm font-extrabold">Цель на неделю</h3>
+          <div className="mt-5 flex items-center gap-5">
+            <div className="relative flex size-24 shrink-0 items-center justify-center rounded-full bg-[conic-gradient(#6366f1_0_72%,#eef2ff_72%)]">
+              <div className="flex size-[72px] flex-col items-center justify-center rounded-full bg-white">
+                <span className="text-lg font-extrabold">72%</span>
+                <span className="text-[9px] text-slate-400">готово</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-bold">3 из 4 сессий</p>
+              <p className="mt-2 text-[11px] leading-5 text-slate-400">Ещё одно интервью — и недельная цель достигнута.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}
+
+function HistoryPage({ onStart }: { onStart: () => void }) {
+  const [filter, setFilter] = useState("Все");
+  return (
+    <>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <PageTitle eyebrow="Архив сессий" title="История интервью" text="Возвращайтесь к ответам и отслеживайте, как меняется качество подготовки." />
+        <button onClick={onStart} className="mb-7 rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700">Новая сессия</button>
+      </div>
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+        {["Все", "Frontend", "React", "Завершённые"].map((item) => (
+          <button key={item} onClick={() => setFilter(item)} className={`whitespace-nowrap rounded-xl px-4 py-2 text-xs font-bold transition ${filter === item ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-500"}`}>
+            {item}
+          </button>
+        ))}
+      </div>
+      <section className="overflow-hidden rounded-[22px] border border-slate-200/80 bg-white shadow-sm">
+        {historyItems.map((item, index) => (
+          <div key={item.date} className={`flex flex-col gap-4 p-5 sm:flex-row sm:items-center ${index !== historyItems.length - 1 ? "border-b border-slate-100" : ""}`}>
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-[14px] bg-indigo-50 text-indigo-600">
+              <Icon name="interview" className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-extrabold">{item.role}</p>
+                <span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-bold text-emerald-600">{item.status}</span>
+              </div>
+              <p className="mt-1 text-[11px] text-slate-400">{item.company} · {item.date} · 5 вопросов</p>
+            </div>
+            <div className="flex items-center justify-between gap-5 sm:justify-end">
+              <div className="text-right">
+                <p className="text-lg font-extrabold text-slate-900">{item.score}%</p>
+                <p className="text-[9px] font-semibold text-slate-400">результат</p>
+              </div>
+              <button className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 hover:border-indigo-200 hover:text-indigo-600">Открыть отчёт</button>
+            </div>
+          </div>
+        ))}
+      </section>
+    </>
+  );
+}
+
+function ProgressPage() {
+  const skills = [
+    ["React и экосистема", 86, "bg-indigo-500"],
+    ["JavaScript / TypeScript", 78, "bg-violet-500"],
+    ["Архитектура", 67, "bg-amber-500"],
+    ["Коммуникация", 81, "bg-emerald-500"],
+  ] as const;
+  return (
+    <>
+      <PageTitle eyebrow="Аналитика" title="Ваш прогресс" text="Оценка складывается из технической точности, структуры ответа и ясности коммуникации." />
+      <div className="mb-5 grid gap-4 sm:grid-cols-3">
+        {[
+          ["Текущий уровень", "78 / 100", "Уверенный Middle"],
+          ["Рост за месяц", "+12%", "Лучший результат"],
+          ["Серия практики", "6 дней", "Личный рекорд"],
+        ].map(([label, value, note]) => (
+          <div key={label} className="rounded-[20px] border border-slate-200/80 bg-white p-5 shadow-sm">
+            <p className="text-[11px] font-semibold text-slate-400">{label}</p>
+            <p className="mt-3 text-2xl font-extrabold tracking-tight">{value}</p>
+            <p className="mt-1 text-[10px] font-bold text-indigo-600">{note}</p>
+          </div>
+        ))}
+      </div>
+      <div className="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
+        <section className="rounded-[22px] border border-slate-200/80 bg-white p-6 shadow-sm">
+          <h3 className="text-sm font-extrabold">Динамика результата</h3>
+          <p className="mt-1 text-[11px] text-slate-400">Последние 6 интервью</p>
+          <div className="mt-8 flex h-48 items-end justify-between gap-3 border-b border-slate-100 px-2">
+            {[52, 61, 58, 69, 74, 82].map((height, index) => (
+              <div key={index} className="group flex h-full flex-1 items-end justify-center">
+                <div className="relative w-full max-w-10 rounded-t-lg bg-gradient-to-t from-indigo-600 to-violet-400 transition hover:opacity-80" style={{ height: `${height}%` }}>
+                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-bold text-slate-500">{height}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex justify-between px-2 text-[9px] font-semibold text-slate-400">
+            <span>10 апр</span><span>18 апр</span><span>26 апр</span><span>5 мая</span><span>12 мая</span><span>Сегодня</span>
+          </div>
+        </section>
+        <section className="rounded-[22px] border border-slate-200/80 bg-white p-6 shadow-sm">
+          <h3 className="text-sm font-extrabold">Навыки</h3>
+          <p className="mt-1 text-[11px] text-slate-400">На основе всех ваших ответов</p>
+          <div className="mt-7 space-y-6">
+            {skills.map(([name, score, color]) => (
+              <div key={name}>
+                <div className="mb-2 flex justify-between text-xs">
+                  <span className="font-bold">{name}</span>
+                  <span className="font-extrabold">{score}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div className={`h-full rounded-full ${color}`} style={{ width: `${score}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}
+
+function SettingsPage() {
+  const [saved, setSaved] = useState(false);
+  return (
+    <>
+      <PageTitle eyebrow="Профиль" title="Настройки" text="Настройте тренировки под ваши карьерные цели и предпочтения." />
+      <section className="max-w-3xl rounded-[22px] border border-slate-200/80 bg-white p-6 shadow-sm">
+        <h3 className="text-sm font-extrabold">Параметры подготовки</h3>
+        <div className="mt-6 grid gap-5 sm:grid-cols-2">
+          <label className="text-xs font-bold text-slate-600">Специализация
+            <select className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400">
+              <option>Frontend-разработчик</option><option>Backend-разработчик</option><option>Fullstack-разработчик</option>
+            </select>
+          </label>
+          <label className="text-xs font-bold text-slate-600">Уровень
+            <select className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400">
+              <option>Middle</option><option>Junior</option><option>Senior</option>
+            </select>
+          </label>
+          <label className="text-xs font-bold text-slate-600 sm:col-span-2">Имя
+            <input defaultValue="Алексей" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-indigo-400" />
+          </label>
+        </div>
+        <div className="mt-6 flex items-center gap-4 border-t border-slate-100 pt-5">
+          <button onClick={() => setSaved(true)} className="rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white hover:bg-indigo-700">Сохранить изменения</button>
+          {saved && <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600"><Icon name="check" className="size-4" /> Сохранено</span>}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function HelpPage() {
+  return (
+    <>
+      <PageTitle eyebrow="Центр помощи" title="Как подготовиться эффективно" text="Короткие ответы на главные вопросы о тренажёре и процессе подготовки." />
+      <div className="grid gap-4 md:grid-cols-2">
+        {[
+          ["Как работает AI-интервьюер?", "Он задаёт вопросы по выбранной роли и оценивает полноту, точность и структуру ответа."],
+          ["Как получить лучший результат?", "Приводите конкретные примеры, проговаривайте ход мысли и завершайте ответ измеримым результатом."],
+          ["Можно ли повторить интервью?", "Да. Сессии можно проходить повторно — новые попытки сохраняются в истории."],
+          ["Где посмотреть обратную связь?", "После завершения сессии подробный разбор появится в истории и разделе прогресса."],
+        ].map(([title, text]) => (
+          <article key={title} className="rounded-[20px] border border-slate-200/80 bg-white p-6 shadow-sm">
+            <h3 className="text-sm font-extrabold">{title}</h3>
+            <p className="mt-2 text-xs leading-6 text-slate-500">{text}</p>
+          </article>
+        ))}
+      </div>
+    </>
+  );
+}
+
 function Sidebar({
   active,
   onSelect,
@@ -205,11 +473,23 @@ function Sidebar({
             </div>
             <p className="mt-2 text-[10px] font-medium text-slate-400">2 из 5 интервью</p>
           </div>
-          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-500 hover:bg-slate-50">
+          <button
+            onClick={() => {
+              onSelect("Настройки");
+              onClose();
+            }}
+            className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-slate-50 ${active === "Настройки" ? "bg-indigo-50 text-indigo-700" : "text-slate-500"}`}
+          >
             <Icon name="settings" className="size-[19px] text-slate-400" />
             Настройки
           </button>
-          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-500 hover:bg-slate-50">
+          <button
+            onClick={() => {
+              onSelect("Помощь");
+              onClose();
+            }}
+            className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-slate-50 ${active === "Помощь" ? "bg-indigo-50 text-indigo-700" : "text-slate-500"}`}
+          >
             <Icon name="help" className="size-[19px] text-slate-400" />
             Помощь
           </button>
@@ -220,8 +500,9 @@ function Sidebar({
 }
 
 export default function App() {
-  const [active, setActive] = useState("Тренажёр");
+  const [active, setActive] = useState("Обзор");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [questionIndex, setQuestionIndex] = useState(1);
   const [answer, setAnswer] = useState("");
   const [submittedAnswers, setSubmittedAnswers] = useState<string[]>([]);
@@ -250,6 +531,15 @@ export default function App() {
     setFinished(false);
   }
 
+  const headerTitles: Record<string, string> = {
+    Обзор: "Главная",
+    Тренажёр: "Frontend-разработчик",
+    История: "История интервью",
+    Прогресс: "Аналитика подготовки",
+    Настройки: "Настройки профиля",
+    Помощь: "Центр помощи",
+  };
+
   return (
     <div className="flex min-h-screen bg-[#f7f8fc] text-slate-900">
       <Sidebar
@@ -270,19 +560,37 @@ export default function App() {
               <Icon name="menu" />
             </button>
             <div>
-              <p className="hidden text-[11px] font-bold uppercase tracking-[0.13em] text-slate-400 sm:block">Практическая сессия</p>
-              <h1 className="text-base font-bold tracking-tight text-slate-900 sm:text-lg">Frontend-разработчик</h1>
+              <p className="hidden text-[11px] font-bold uppercase tracking-[0.13em] text-slate-400 sm:block">Devly Interview Lab</p>
+              <h1 className="text-base font-bold tracking-tight text-slate-900 sm:text-lg">{headerTitles[active] ?? active}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
-            <div className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 sm:flex">
-              <span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,.1)]" />
-              Сессия активна
+            {active === "Тренажёр" && !finished && (
+              <div className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 sm:flex">
+                <span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,.1)]" />
+                Сессия активна
+              </div>
+            )}
+            <div className="relative">
+              <button
+                aria-label="Уведомления"
+                onClick={() => setNotificationsOpen((current) => !current)}
+                className="relative rounded-xl p-2.5 text-slate-500 hover:bg-slate-100"
+              >
+                <Icon name="bell" />
+                <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-white bg-rose-500" />
+              </button>
+              {notificationsOpen && (
+                <div className="absolute right-0 top-12 z-20 w-72 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_18px_50px_rgba(15,23,42,.15)]">
+                  <p className="px-2 py-2 text-xs font-extrabold">Уведомления</p>
+                  <button onClick={() => { setActive("Прогресс"); setNotificationsOpen(false); }} className="w-full rounded-xl bg-indigo-50 p-3 text-left">
+                    <p className="text-xs font-bold text-indigo-900">Новый отчёт готов</p>
+                    <p className="mt-1 text-[10px] leading-4 text-indigo-500">Посмотрите разбор последнего интервью и рекомендации.</p>
+                  </button>
+                  <p className="px-2 pt-3 text-[9px] font-semibold text-slate-400">Сегодня, 15:02</p>
+                </div>
+              )}
             </div>
-            <button aria-label="Уведомления" className="relative rounded-xl p-2.5 text-slate-500 hover:bg-slate-100">
-              <Icon name="bell" />
-              <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-white bg-rose-500" />
-            </button>
             <div className="h-8 w-px bg-slate-200" />
             <div className="flex items-center gap-3">
               <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-100 to-violet-200 text-xs font-extrabold text-indigo-700">АК</div>
@@ -295,6 +603,20 @@ export default function App() {
         </header>
 
         <div className="mx-auto max-w-[1180px] px-4 py-6 sm:px-8 sm:py-8">
+          {active !== "Тренажёр" ? (
+            active === "Обзор" ? (
+              <OverviewPage onStart={() => { restart(); setActive("Тренажёр"); }} onProgress={() => setActive("Прогресс")} />
+            ) : active === "История" ? (
+              <HistoryPage onStart={() => { restart(); setActive("Тренажёр"); }} />
+            ) : active === "Прогресс" ? (
+              <ProgressPage />
+            ) : active === "Настройки" ? (
+              <SettingsPage />
+            ) : (
+              <HelpPage />
+            )
+          ) : (
+          <>
           <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <div className="mb-2 flex items-center gap-2 text-xs font-bold text-indigo-600">
@@ -482,11 +804,13 @@ export default function App() {
                 </p>
               </div>
 
-              <button className="w-full rounded-xl py-2 text-xs font-semibold text-slate-400 transition hover:text-rose-500">
+              <button onClick={() => setFinished(true)} className="w-full rounded-xl py-2 text-xs font-semibold text-slate-400 transition hover:text-rose-500">
                 Завершить интервью досрочно
               </button>
             </aside>
           </div>
+          </>
+          )}
         </div>
       </main>
     </div>
