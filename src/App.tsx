@@ -1,4 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
+import AuthScreen from "./components/AuthScreen";
+import { api, type InterviewSession, type Profile } from "./lib/api";
+import { supabase } from "./lib/supabase";
 
 type IconName =
   | "dashboard"
@@ -240,8 +244,17 @@ function OverviewPage({ onStart, onProgress }: { onStart: () => void; onProgress
   );
 }
 
-function HistoryPage({ onStart }: { onStart: () => void }) {
+function HistoryPage({ onStart, sessions }: { onStart: () => void; sessions: InterviewSession[] }) {
   const [filter, setFilter] = useState("Все");
+  const visibleItems = sessions.length
+    ? sessions.map((session) => ({
+        role: session.role,
+        company: session.company,
+        date: new Date(session.createdAt).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+        score: session.report.score,
+        status: "Завершено",
+      }))
+    : historyItems;
   return (
     <>
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -256,8 +269,8 @@ function HistoryPage({ onStart }: { onStart: () => void }) {
         ))}
       </div>
       <section className="overflow-hidden rounded-[22px] border border-slate-200/80 bg-white shadow-sm">
-        {historyItems.map((item, index) => (
-          <div key={item.date} className={`flex flex-col gap-4 p-5 sm:flex-row sm:items-center ${index !== historyItems.length - 1 ? "border-b border-slate-100" : ""}`}>
+        {visibleItems.map((item, index) => (
+          <div key={item.date} className={`flex flex-col gap-4 p-5 sm:flex-row sm:items-center ${index !== visibleItems.length - 1 ? "border-b border-slate-100" : ""}`}>
             <div className="flex size-11 shrink-0 items-center justify-center rounded-[14px] bg-indigo-50 text-indigo-600">
               <Icon name="interview" className="size-5" />
             </div>
@@ -344,8 +357,20 @@ function ProgressPage() {
   );
 }
 
-function SettingsPage() {
+function SettingsPage({ profile, onSave }: { profile: Profile; onSave: (profile: Profile) => Promise<void> }) {
   const [saved, setSaved] = useState(false);
+  const [form, setForm] = useState(profile);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => setForm(profile), [profile]);
+
+  async function save() {
+    setSaving(true);
+    setSaved(false);
+    await onSave(form);
+    setSaving(false);
+    setSaved(true);
+  }
   return (
     <>
       <PageTitle eyebrow="Профиль" title="Настройки" text="Настройте тренировки под ваши карьерные цели и предпочтения." />
@@ -353,21 +378,21 @@ function SettingsPage() {
         <h3 className="text-sm font-extrabold">Параметры подготовки</h3>
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <label className="text-xs font-bold text-slate-600">Специализация
-            <select className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400">
+            <select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400">
               <option>Frontend-разработчик</option><option>Backend-разработчик</option><option>Fullstack-разработчик</option>
             </select>
           </label>
           <label className="text-xs font-bold text-slate-600">Уровень
-            <select className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400">
+            <select value={form.level} onChange={(event) => setForm({ ...form, level: event.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-400">
               <option>Middle</option><option>Junior</option><option>Senior</option>
             </select>
           </label>
           <label className="text-xs font-bold text-slate-600 sm:col-span-2">Имя
-            <input defaultValue="Алексей" className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-indigo-400" />
+            <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-indigo-400" />
           </label>
         </div>
         <div className="mt-6 flex items-center gap-4 border-t border-slate-100 pt-5">
-          <button onClick={() => setSaved(true)} className="rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white hover:bg-indigo-700">Сохранить изменения</button>
+          <button onClick={save} disabled={saving} className="rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white hover:bg-indigo-700 disabled:opacity-60">{saving ? "Сохраняем..." : "Сохранить изменения"}</button>
           {saved && <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600"><Icon name="check" className="size-4" /> Сохранено</span>}
         </div>
       </section>
@@ -499,7 +524,7 @@ function Sidebar({
   );
 }
 
-export default function App() {
+function DashboardApp({ session }: { session: Session }) {
   const [active, setActive] = useState("Обзор");
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -508,17 +533,51 @@ export default function App() {
   const [submittedAnswers, setSubmittedAnswers] = useState<string[]>([]);
   const [showHint, setShowHint] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [sessionQuestions, setSessionQuestions] = useState(questions);
+  const [profile, setProfile] = useState<Profile>({
+    name: session.user.email?.split("@")[0] ?? "Кандидат",
+    role: "Frontend-разработчик",
+    level: "Middle",
+    stack: "React / TypeScript",
+  });
+  const [savedSessions, setSavedSessions] = useState<InterviewSession[]>([]);
+  const [requestState, setRequestState] = useState("");
+  const [requestError, setRequestError] = useState("");
 
-  const progress = useMemo(() => ((questionIndex + 1) / questions.length) * 100, [questionIndex]);
+  const progress = useMemo(() => ((questionIndex + 1) / sessionQuestions.length) * 100, [questionIndex, sessionQuestions.length]);
 
-  function submitAnswer() {
+  useEffect(() => {
+    Promise.all([api.profile(), api.sessions()])
+      .then(([profileResult, sessionsResult]) => {
+        setProfile(profileResult.profile);
+        setSavedSessions(sessionsResult.sessions);
+      })
+      .catch((error) => setRequestError(error.message));
+  }, []);
+
+  async function submitAnswer() {
     if (!answer.trim()) return;
     const updated = [...submittedAnswers, answer.trim()];
     setSubmittedAnswers(updated);
     setAnswer("");
     setShowHint(false);
-    if (questionIndex === questions.length - 1) {
-      setFinished(true);
+    if (questionIndex === sessionQuestions.length - 1) {
+      setRequestState("AI анализирует ваши ответы...");
+      setRequestError("");
+      try {
+        const result = await api.evaluateInterview({
+          role: profile.role,
+          level: profile.level,
+          questions: sessionQuestions,
+          answers: updated,
+        });
+        setSavedSessions((current) => [result.session, ...current]);
+        setFinished(true);
+      } catch (error) {
+        setRequestError(error instanceof Error ? error.message : "Не удалось оценить ответы");
+      } finally {
+        setRequestState("");
+      }
     } else {
       setQuestionIndex((current) => current + 1);
     }
@@ -529,6 +588,29 @@ export default function App() {
     setSubmittedAnswers([]);
     setAnswer("");
     setFinished(false);
+    setRequestError("");
+  }
+
+  async function beginInterview() {
+    restart();
+    setActive("Тренажёр");
+    setRequestState("AI готовит вопросы под ваш профиль...");
+    try {
+      const result = await api.startInterview(profile);
+      setSessionQuestions(result.questions);
+      setQuestionIndex(0);
+    } catch (error) {
+      setSessionQuestions(questions);
+      setQuestionIndex(0);
+      setRequestError(`${error instanceof Error ? error.message : "Не удалось создать вопросы"}. Загружен резервный сценарий.`);
+    } finally {
+      setRequestState("");
+    }
+  }
+
+  async function saveProfile(nextProfile: Profile) {
+    const result = await api.saveProfile(nextProfile);
+    setProfile(result.profile);
   }
 
   const headerTitles: Record<string, string> = {
@@ -592,26 +674,32 @@ export default function App() {
               )}
             </div>
             <div className="h-8 w-px bg-slate-200" />
-            <div className="flex items-center gap-3">
+            <button onClick={() => supabase.auth.signOut()} title="Выйти из аккаунта" className="flex items-center gap-3 rounded-xl p-1.5 text-left hover:bg-slate-50">
               <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-100 to-violet-200 text-xs font-extrabold text-indigo-700">АК</div>
               <div className="hidden sm:block">
-                <p className="text-xs font-bold">Алексей К.</p>
-                <p className="text-[10px] text-slate-400">Frontend Middle</p>
+                <p className="text-xs font-bold">{profile.name}</p>
+                <p className="text-[10px] text-slate-400">{profile.role.replace("-разработчик", "")} {profile.level}</p>
               </div>
-            </div>
+            </button>
           </div>
         </header>
 
         <div className="mx-auto max-w-[1180px] px-4 py-6 sm:px-8 sm:py-8">
+          {(requestState || requestError) && (
+            <div className={`mb-5 flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-xs font-semibold ${requestError ? "border border-amber-200 bg-amber-50 text-amber-700" : "border border-indigo-100 bg-indigo-50 text-indigo-700"}`}>
+              <span>{requestError || requestState}</span>
+              {requestError && <button onClick={() => setRequestError("")} className="font-extrabold">Закрыть</button>}
+            </div>
+          )}
           {active !== "Тренажёр" ? (
             active === "Обзор" ? (
-              <OverviewPage onStart={() => { restart(); setActive("Тренажёр"); }} onProgress={() => setActive("Прогресс")} />
+              <OverviewPage onStart={beginInterview} onProgress={() => setActive("Прогресс")} />
             ) : active === "История" ? (
-              <HistoryPage onStart={() => { restart(); setActive("Тренажёр"); }} />
+              <HistoryPage onStart={beginInterview} sessions={savedSessions} />
             ) : active === "Прогресс" ? (
               <ProgressPage />
             ) : active === "Настройки" ? (
-              <SettingsPage />
+              <SettingsPage profile={profile} onSave={saveProfile} />
             ) : (
               <HelpPage />
             )
@@ -640,7 +728,7 @@ export default function App() {
               <div className="h-7 w-px bg-slate-200" />
               <div>
                 <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Прогресс</p>
-                <p className="text-sm font-bold">{questionIndex + 1} / {questions.length}</p>
+                <p className="text-sm font-bold">{questionIndex + 1} / {sessionQuestions.length}</p>
               </div>
             </div>
           </div>
@@ -694,7 +782,7 @@ export default function App() {
                       <div className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-slate-900 text-[10px] font-bold text-white">М</div>
                       <div className="max-w-[650px]">
                         <div className="rounded-2xl rounded-tl-md bg-slate-100 px-5 py-4 text-[14px] font-medium leading-7 text-slate-700">
-                          {questions[questionIndex]}
+                          {sessionQuestions[questionIndex]}
                         </div>
                         <p className="mt-2 text-[10px] font-medium text-slate-400">Сейчас</p>
                       </div>
@@ -742,7 +830,7 @@ export default function App() {
                           <span className="hidden text-[10px] font-medium text-slate-400 sm:block">⌘ + Enter</span>
                           <button
                             onClick={submitAnswer}
-                            disabled={!answer.trim()}
+                            disabled={!answer.trim() || !!requestState}
                             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-200 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
                           >
                             Ответить
@@ -819,4 +907,31 @@ export default function App() {
 
 function BriefcaseIcon() {
   return <Icon name="briefcase" className="size-4" />;
+}
+
+export default function App() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setAuthReady(true);
+    });
+    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setAuthReady(true);
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  if (!authReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fc]">
+        <div className="size-9 animate-spin rounded-full border-2 border-indigo-100 border-t-indigo-600" />
+      </div>
+    );
+  }
+
+  return session ? <DashboardApp session={session} /> : <AuthScreen />;
 }
